@@ -2,7 +2,7 @@ FROM node:lts-alpine
 LABEL authors="gbl"
 
 # instala um servidor http simples para servir conteúdo estático
-RUN npm install -g http-server
+RUN yarn global add http-server
 
 # faz da pasta 'app' o diretório atual de trabalho
 WORKDIR /app
