@@ -2,14 +2,14 @@
   <div id="nav">
     <template v-if="!loginState">
       <div class="pv-logo">
-        <img src="/img/2-inteira branca.png" width="50%" alt="Logo PV">
+        <img src="/img/2-inteira branca.png" width="40%" alt="Logo PV">
         <h1>"Let there be light" יְהִי אוֹר</h1>
         <h2><i>Genesis 1:3</i></h2>
       </div>
     </template>
     <el-form v-if="!loginState" :model="loginForm" :inline="true">
-      <el-form-item label="Email" size="large">
-        <el-input v-model="loginForm.username" placeholder="Digite o email"></el-input>
+      <el-form-item label="Usuário" size="large">
+        <el-input v-model="loginForm.username" placeholder="Digite o usuário"></el-input>
       </el-form-item>
       <el-form-item label="Senha" size="large">
         <el-input type="password" v-model="loginForm.password" placeholder="Digite a senha"></el-input>
@@ -91,16 +91,20 @@ onMounted(async () => {
 
 const login = async () => {
   try {
-    await homeAssistantClient.login(
-      loginForm.value.username,
-      loginForm.value.password
-    )
-    localStorage.setItem('session', JSON.stringify(homeAssistantClient.getSession()))
-    loginState.value = true
-    loginForm.value = {username: '', password: ''}
-    refreshDevices()
+    if (loginForm.value.username === 'multimidia' && loginForm.value.password === 'luzes1212') {
+      await homeAssistantClient.login(
+        'pvcmissoes@gmail.com',
+        'luzespv1212'
+      )
+      localStorage.setItem('session', JSON.stringify(homeAssistantClient.getSession()))
+      loginState.value = true
+      loginForm.value = {username: '', password: ''}
+      await refreshDevices()
+    } else {
+      ElMessage.error(`Oops, login inválido`)
+    }
   } catch (err) {
-    ElMessage.error(`Oops, login error. (${err})`)
+    ElMessage.error(`Oops, erro no login. (${err})`)
   }
 }
 
