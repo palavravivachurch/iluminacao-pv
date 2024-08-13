@@ -1,10 +1,33 @@
 import axios from 'axios'
 
+const authKey = "88d59e5d-8ea7-4cb9-9406-55d2fe34870a:fx"; // Replace with your key
+
 const defaults = {
-  region: 'eu'
+  region: 'us'
 }
 
-function ensureSuccess (response) {
+async function translateText(text) {
+  const url = `https://api-free.deepl.com/v2/translate`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `DeepL-Auth-Key ${authKey}`,
+    },
+    body: JSON.stringify({
+      text: [text],
+      target_lang: 'PT-BR',
+      source_lang: 'EN',
+      formality: 'less'
+    }),
+  });
+
+  const data = await response.json();
+  return data.translations[0].text
+}
+
+async function ensureSuccess(response) {
   const data = response.data
   if (typeof data !== 'object') {
     throw new Error(data)
@@ -13,24 +36,26 @@ function ensureSuccess (response) {
     return
   }
   if (data.responseStatus === 'error') {
-    throw new Error(data.errorMsg)
+    const result = await translateText(data.errorMsg);
+    throw new Error(result)
   }
   if (!data.header || data.header.code !== 'SUCCESS') {
-    throw new Error(data.header.msg)
+    const result = await translateText(data.header.msg);
+    throw new Error(result)
   }
 }
 
-function HomeAssistantClient (session) {
+function HomeAssistantClient(session) {
   let client
   if (session) {
     client = createClient(session.region)
   }
 
-  function createClient (region) {
-    return axios.create({ baseURL: '/api/homeassistant', params: { region } })
+  function createClient(region) {
+    return axios.create({baseURL: '/api/homeassistant', params: {region}})
   }
 
-  function normalizeToken (token) {
+  function normalizeToken(token) {
     const result = {
       ...token,
       expires: Math.trunc((Date.now() / 1000)) + token.expires_in
@@ -52,7 +77,7 @@ function HomeAssistantClient (session) {
       from: 'tuya'
     }))
     console.debug('auth.do', userName, authResponse.data)
-    ensureSuccess(authResponse)
+    await ensureSuccess(authResponse)
 
     session = {
       region,
@@ -67,14 +92,16 @@ function HomeAssistantClient (session) {
       rand: Math.random()
     })
     console.debug('access.do', accessResponse.data)
-    ensureSuccess(accessResponse)
+    await ensureSuccess(accessResponse)
 
     session.token = normalizeToken(accessResponse.data)
   }
 
   this.getSession = () => session
 
-  this.dropSession = () => { session = null }
+  this.dropSession = () => {
+    session = null
+  }
 
   this.deviceDiscovery = async () => {
     const discoveryResponse = await client.post('/skill', {
@@ -88,16 +115,17 @@ function HomeAssistantClient (session) {
       }
     })
     console.debug('device discovery response', discoveryResponse.data)
-    ensureSuccess(discoveryResponse)
+    await ensureSuccess(discoveryResponse)
 
     const payload = discoveryResponse.data.payload
-    if (payload && payload.devices) {
+    if (payload?.devices) {
       // fix payload data
       payload.devices = payload.devices
         .map(device => {
+          console.log(device)
           // workaround json escaped signes
           device.name = JSON.parse(`"${device.name}"`)
-        
+
           // workaround automation type
           if (device.dev_type === 'scene' && device.name.endsWith('#')) {
             device.dev_type = 'automation'
@@ -112,7 +140,15 @@ function HomeAssistantClient (session) {
             icon: device.icon
           }
         })
-        .filter(device => device.type !== 'automation')
+        .filter(device => device.type === "switch")
+        .sort((b, a) => {
+          const order = ["Geral Nave 1", "Geral Nave 2", "Centro Nave 1", "Centro Nave 2", "Direita Nave 1", "Direita Nave 2", "Esquerda Nave 1", "Esquerda Nave 2"];
+
+          const aIndex = order.findIndex((prefix) => a.name.startsWith(prefix));
+          const bIndex = order.findIndex((prefix) => b.name.startsWith(prefix));
+
+          return aIndex - bIndex;
+        });
     }
 
     return discoveryResponse.data
@@ -122,7 +158,7 @@ function HomeAssistantClient (session) {
   this.deviceControl = async (deviceId, action, fieldValue, fieldName) => {
     // for testing purpose only
     if (deviceId === 0) {
-      return { header: { code: 'SUCCESS' } }
+      return {header: {code: 'SUCCESS'}}
     }
 
     fieldName = fieldName || 'value'
@@ -146,7 +182,7 @@ function HomeAssistantClient (session) {
       }
     })
     console.debug('device control response', `${action}: ${fieldName}=${fieldValue}`, controlResponse.data)
-    ensureSuccess(controlResponse)
+    await ensureSuccess(controlResponse)
   }
 }
 

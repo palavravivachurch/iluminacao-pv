@@ -1,15 +1,15 @@
 {
-  "name": "smart-life-webapp",
+  "name": "iluminacao-pv",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vercel dev",
+    "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "@element-plus/theme-chalk": "^2.2.16",
-    "axios": "^0.27.2",
+    "axios": "^1.7.3",
     "element-plus": "^2.7.8",
     "http-proxy-middleware": "^3.0.0",
     "vue": "^3.4.35",
@@ -22,6 +22,6 @@
     "@vue/cli-plugin-vuex": "^5.0.8",
     "@vue/cli-service": "^5.0.8",
     "@vue/eslint-config-standard": "^8.0.1",
-    "vercel": "^35.2.3"
+    "vercel": "^35.2.4"
   }
 }
