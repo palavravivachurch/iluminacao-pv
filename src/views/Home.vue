@@ -1,12 +1,12 @@
 <template>
   <div id="nav">
-    <el-page-header v-if="!loginState">
+    <template v-if="!loginState">
       <div class="pv-logo">
         <img src="/img/2-inteira branca.png" width="50%" alt="Logo PV">
         <h1>"Let there be light" יְהִי אוֹר</h1>
         <h2><i>Genesis 1:3</i></h2>
       </div>
-    </el-page-header>
+    </template>
     <el-form v-if="!loginState" :model="loginForm" :inline="true">
       <el-form-item label="Email" size="large">
         <el-input v-model="loginForm.username" placeholder="Digite o email"></el-input>
@@ -19,8 +19,8 @@
       </el-form-item>
     </el-form>
     <template v-else>
-      <el-button type="default" @click="refreshDevices()">Refresh</el-button>
-      <el-button type="default" @click="logout()">Logout</el-button>
+      <el-button type="primary" @click="refreshDevices()" size="large">Atualizar</el-button>
+      <el-button type="primary" @click="logout()" size="large">Sair</el-button>
     </template>
   </div>
   <div id="devices">
